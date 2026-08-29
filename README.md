@@ -22,7 +22,7 @@ Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SC
 
 ---
 
-## 📦 Komponen Proyek
+##  Komponen Proyek
 
 | File | Deskripsi |
 | :--- | :--- |
@@ -86,7 +86,7 @@ Buka browser dan navigasikan ke:
 
 ### Fitur Interaktif pada Dashboard:
 1. **Real-Time Telemetry Display:** Tegangan (30-36V), Arus (5-8A), Daya (W), dan Suhu (25-45°C) terupdate otomatis via WebSocket setiap 2 detik.
-2. **Interactive Night Mode:** Klik tombol **☀️ Day Mode / 🌙 Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
-3. **Download CV:** Klik tombol **📄 Download CV** untuk mengunduh `CV_Anda.pdf`.
+2. **Interactive Night Mode:** Klik tombol ** Day Mode /  Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
+3. **Download CV:** Klik tombol ** Download CV** untuk mengunduh `CV_Anda.pdf`.
 4. **Live Trend Chart:** Grafik multivariat dinamis yang memvisualisasikan tren daya, tegangan, dan arus secara real-time.
 5. **Live MQTT Stream Console:** Memonitor paket data mentah yang masuk dari broker.
