@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PLTS On-Grid SCADA Control Room</title>
+    <!-- Google Fonts & Lucide Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <style>
+        :root {
+            /* Light / Day Industrial Theme */
+            --bg-body: #e9eef4;
+            --bg-panel: #ffffff;
+            --bg-panel-header: #f1f5f9;
+            --bg-card: #f8fafc;
+            --border-color: #cbd5e1;
+            --border-glow: rgba(59, 130, 246, 0.2);
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --text-accent: #2563eb;
+            --accent-cyan: #0284c7;
+            --accent-amber: #d97706;
+            --accent-emerald: #059669;
+            --accent-rose: #dc2626;
+            --accent-purple: #7c3aed;
+            --gauge-track: #e2e8f0;
+            --led-on: #10b981;
+            --led-off: #94a3b8;
+            --chart-grid: rgba(0, 0, 0, 0.06);
+            --chart-text: #64748b;
+            --shadow-panel: 0 4px 20px -2px rgba(0, 0, 0, 0.08);
+            --hud-glow: none;
+            --mono-font: 'JetBrains Mono', monospace;
+            --display-font: 'Chakra Petch', sans-serif;
+            --sans-font: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body.dark-mode {
+            /* SCADA Cyber-Industrial Night Theme */
+            --bg-body: #0a0e17;
+            --bg-panel: #111827;
+            --bg-panel-header: #1e293b;
+            --bg-card: #151f32;
+            --border-color: #1e2e4a;
+            --border-glow: rgba(0, 240, 255, 0.15);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-accent: #00f0ff;
+            --accent-cyan: #00f0ff;
+            --accent-amber: #fbbf24;
+            --accent-emerald: #10b981;
+            --accent-rose: #f43f5e;
+            --accent-purple: #a855f7;
+            --gauge-track: #1e293b;
+            --led-on: #00f0ff;
+            --led-off: #334155;
+            --chart-grid: rgba(255, 255, 255, 0.05);
+            --chart-text: #94a3b8;
+            --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            --hud-glow: 0 0 15px rgba(0, 240, 255, 0.25);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+        }
+
+        body {
+            font-family: var(--sans-font);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 1.25rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Top SCADA Control Header */
+        .scada-header {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-panel);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .system-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-amber), var(--accent-rose));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            font-size: 1.4rem;
+            box-shadow: 0 0 15px rgba(217, 119, 6, 0.4);
+        }
+
+        .title-text h1 {
+            font-family: var(--display-font);
+            font-size: 1.35rem;
+            letter-spacing: 0.05em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .title-text p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            font-family: var(--mono-font);
+        }
+
+        /* Header Actions & Controls */
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.45rem 0.85rem;
+            font-family: var(--mono-font);
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .led-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--led-off);
+        }
+
+        .led-dot.active {
+            background-color: var(--led-on);
+            box-shadow: 0 0 10px var(--led-on);
+            animation: pulse-glow 2s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Industrial Buttons */
+        .scada-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.55rem 1rem;
+            border-radius: 6px;
+            font-size: 0.82rem;
+            font-family: var(--mono-font);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-main);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: all 0.2s ease;
+        }
+
+        .scada-btn:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--border-glow);
+            transform: translateY(-1px);
+        }
+
+        .scada-btn-primary {
+            background: linear-gradient(135deg, #0284c7, #2563eb);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .scada-btn-primary:hover {
+            background: linear-gradient(135deg, #0369a1, #1d4ed8);
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(37, 99, 235, 0.6);
+        }
+
+        /* Main SCADA Telemetry Grid */
+        .telemetry-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .telemetry-card {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-panel);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .telemetry-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent, var(--accent-cyan));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            font-family: var(--display-font);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .card-tag {
+            font-family: var(--mono-font);
+            font-size: 0.68rem;
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+        }
+
+        .value-display {
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+            margin: 0.5rem 0 1rem 0;
+        }
+
+        .numeric-value {
+            font-family: var(--display-font);
+            font-size: 2.75rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-main);
+            line-height: 1;
+        }
+
+        .unit {
+            font-family: var(--display-font);
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        /* Industrial Gauge / Range Indicator */
+        .gauge-bar-wrapper {
+            width: 100%;
+            height: 8px;
+            background-color: var(--gauge-track);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0.5rem;
+        }
+
+        .gauge-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--card-accent, var(--accent-cyan));
+            border-radius: 4px;
+            transition: width 0.5s ease-out;
+        }
+
+        .gauge-scale {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            font-family: var(--mono-font);
+            color: var(--text-muted);
+        }
+
+        /* Specific card colors */
+        .card-voltage { --card-accent: #0284c7; }
+        .card-current { --card-accent: #10b981; }
+        .card-power   { --card-accent: #fbbf24; }
+        .card-temp    { --card-accent: #f43f5e; }
+
+        /* Secondary Grid Section (Charts + SCADA Info) */
+        .scada-middle-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 1024px) {
+            .scada-middle-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-panel, .info-panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-panel);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-heading {
+            font-family: var(--display-font);
+            font-size: 0.95rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .chart-container {
+            position: relative;
+            flex-grow: 1;
+            min-height: 240px;
+            width: 100%;
+        }
+
+        /* System Telemetry Specs Table */
+        .specs-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.65rem;
+        }
+
+        .spec-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0.75rem;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.8rem;
+        }
+
+        .spec-label {
+            color: var(--text-muted);
+            font-family: var(--sans-font);
+        }
+
+        .spec-val {
+            font-family: var(--mono-font);
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        /* SCADA Event Log Console */
+        .scada-console {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+            box-shadow: var(--shadow-panel);
+        }
+
+        .console-logs {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 0.75rem;
+            height: 130px;
+            overflow-y: auto;
+            font-family: var(--mono-font);
+            font-size: 0.73rem;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 0.35rem;
+        }
+
+        .log-entry {
+            display: flex;
+            gap: 0.75rem;
+            line-height: 1.4;
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .log-topic {
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .log-msg {
+            color: var(--text-main);
+            word-break: break-all;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            font-size: 0.75rem;
+            font-family: var(--mono-font);
+            color: var(--text-muted);
+            margin-top: auto;
+            padding: 0.75rem 0;
+        }
+
+        /* Pulse animation for live values */
+        .flash-update {
+            animation: text-pulse 0.4s ease;
+        }
+
+        @keyframes text-pulse {
+            0% { opacity: 0.4; }
+            50% { transform: scale(1.02); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="dark-mode">
+
+    <!-- Header Control Room Bar -->
+    <header class="scada-header">
+        <div class="header-title">
+            <div class="system-icon">☀️</div>
+            <div class="title-text">
+                <h1>PLTS On-Grid SCADA Control</h1>
+                <p>Telemetry Node: INV-01 // On-Grid Synchronization System</p>
+            </div>
+        </div>
+
+        <div class="header-controls">
+            <!-- WebSocket Connection Status -->
+            <div class="status-badge" id="ws-badge">
+                <span class="led-dot" id="ws-led"></span>
+                <span id="ws-status-text">WS: DISCONNECTED</span>
+            </div>
+
+            <!-- MQTT Sync Status -->
+            <div class="status-badge" id="mqtt-badge">
+                <span class="led-dot" id="mqtt-led"></span>
+                <span id="mqtt-status-text">MQTT: STANDBY</span>
+            </div>
+
+            <!-- Interactive Night Mode Toggle Button -->
+            <button class="scada-btn" id="night-mode-btn" onclick="toggleNightMode()">
+                <span id="theme-icon">☀️</span>
+                <span id="theme-label">Day Mode</span>
+            </button>
+
+            <!-- Download CV Button -->
+            <a href="/CV_Anda.pdf" download="CV_Anda.pdf" class="scada-btn scada-btn-primary" id="download-cv-btn">
+                <span>📄</span>
+                <span>Download CV</span>
+            </a>
+        </div>
+    </header>
+
+    <!-- Real-Time SCADA Telemetry Cards -->
+    <main class="telemetry-grid">
+        <!-- 1. Voltage Card (30-36V) -->
+        <section class="telemetry-card card-voltage">
+            <div class="card-header">
+                <span class="card-label">Tegangan PV (DC)</span>
+                <span class="card-tag">30 - 36 V</span>
+            </div>
+            <div class="value-display">
+                <span class="numeric-value" id="val-voltage">0.00</span>
+                <span class="unit">V</span>
+            </div>
+            <div class="gauge-bar-wrapper">
+                <div class="gauge-bar-fill" id="gauge-voltage"></div>
+            </div>
+            <div class="gauge-scale">
+                <span>Min: 0V</span>
+                <span>Nominal: 33V</span>
+                <span>Max: 40V</span>
+            </div>
+        </section>
+
+        <!-- 2. Current Card (5-8A) -->
+        <section class="telemetry-card card-current">
+            <div class="card-header">
+                <span class="card-label">Arus Panel (DC)</span>
+                <span class="card-tag">5 - 8 A</span>
+            </div>
+            <div class="value-display">
+                <span class="numeric-value" id="val-current">0.00</span>
+                <span class="unit">A</span>
+            </div>
+            <div class="gauge-bar-wrapper">
+                <div class="gauge-bar-fill" id="gauge-current"></div>
+            </div>
+            <div class="gauge-scale">
+                <span>Min: 0A</span>
+                <span>Nominal: 6.5A</span>
+                <span>Max: 10A</span>
+            </div>
+        </section>
+
+        <!-- 3. Power Card (V * I) -->
+        <section class="telemetry-card card-power">
+            <div class="card-header">
+                <span class="card-label">Daya Output (P = V × I)</span>
+                <span class="card-tag">WATT</span>
+            </div>
+            <div class="value-display">
+                <span class="numeric-value" id="val-power">0.00</span>
+                <span class="unit">W</span>
+            </div>
+            <div class="gauge-bar-wrapper">
+                <div class="gauge-bar-fill" id="gauge-power"></div>
+            </div>
+            <div class="gauge-scale">
+                <span>0 W</span>
+                <span>Nominal: 215W</span>
+                <span>Max: 350W</span>
+            </div>
+        </section>
+
+        <!-- 4. Temperature Card (25-45°C) -->
+        <section class="telemetry-card card-temp">
+            <div class="card-header">
+                <span class="card-label">Suhu Modul Surya</span>
+                <span class="card-tag">25 - 45 °C</span>
+            </div>
+            <div class="value-display">
+                <span class="numeric-value" id="val-temp">0.00</span>
+                <span class="unit">°C</span>
+            </div>
+            <div class="gauge-bar-wrapper">
+                <div class="gauge-bar-fill" id="gauge-temp"></div>
+            </div>
+            <div class="gauge-scale">
+                <span>20°C</span>
+                <span>Warning: >50°C</span>
+                <span>Max: 70°C</span>
+            </div>
+        </section>
+    </main>
+
+    <!-- Secondary SCADA Section: Trend Chart & Grid Status -->
+    <section class="scada-middle-section">
+        <!-- Live Real-Time Trend Chart -->
+        <div class="chart-panel">
+            <div class="panel-heading">
+                <span>📈 Live Telemetry Trend History</span>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-family: var(--mono-font);">Sampling: 2.0s</span>
+            </div>
+            <div class="chart-container">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <!-- On-Grid System Parameters -->
+        <div class="info-panel">
+            <div class="panel-heading">
+                <span>⚡ On-Grid Inverter Parameters</span>
+                <span style="font-size: 0.75rem; color: var(--accent-emerald); font-family: var(--mono-font);">SYNCHRONIZED</span>
+            </div>
+            <div class="specs-list">
+                <div class="spec-item">
+                    <span class="spec-label">Tegangan Grid (AC)</span>
+                    <span class="spec-val" id="spec-grid-v">220.0 V</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Frekuensi Grid</span>
+                    <span class="spec-val" id="spec-grid-freq">50.00 Hz</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Efisiensi Inverter</span>
+                    <span class="spec-val" id="spec-eff">97.5 %</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Total Energi Kumulatif</span>
+                    <span class="spec-val" id="spec-energy">0.00 kWh</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Status Operasional</span>
+                    <span class="spec-val" id="spec-status" style="color: var(--accent-emerald);">NORMAL_OPERATING</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Update Terakhir</span>
+                    <span class="spec-val" id="spec-timestamp">--:--:--</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SCADA Real-Time Event & Telemetry Console -->
+    <section class="scada-console">
+        <div class="panel-heading">
+            <span>💻 Real-Time MQTT Telemetry Stream (Topic: plts/telemetry)</span>
+            <span id="packet-counter" style="font-size: 0.75rem; font-family: var(--mono-font); color: var(--accent-cyan);">Packets: 0</span>
+        </div>
+        <div class="console-logs" id="console-logs">
+            <div class="log-entry">
+                <span class="log-time">[00:00:00]</span>
+                <span class="log-topic">[SYSTEM]</span>
+                <span class="log-msg">Menunggu sambungan WebSocket ke ws://localhost:8000/ws ...</span>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        PLTS On-Grid SCADA Simulator &bull; FastAPI + WebSocket + MQTT Architecture &bull; Localhost Telemetry Control Room
+    </footer>
+
+    <!-- SCADA Real-Time JavaScript Engine -->
+    <script>
+        // DOM Elements
+        const elVoltage = document.getElementById('val-voltage');
+        const elCurrent = document.getElementById('val-current');
+        const elPower = document.getElementById('val-power');
+        const elTemp = document.getElementById('val-temp');
+
+        const gaugeVoltage = document.getElementById('gauge-voltage');
+        const gaugeCurrent = document.getElementById('gauge-current');
+        const gaugePower = document.getElementById('gauge-power');
+        const gaugeTemp = document.getElementById('gauge-temp');
+
+        const wsLed = document.getElementById('ws-led');
+        const wsStatusText = document.getElementById('ws-status-text');
+        const mqttLed = document.getElementById('mqtt-led');
+        const mqttStatusText = document.getElementById('mqtt-status-text');
+
+        const specGridV = document.getElementById('spec-grid-v');
+        const specGridFreq = document.getElementById('spec-grid-freq');
+        const specEff = document.getElementById('spec-eff');
+        const specEnergy = document.getElementById('spec-energy');
+        const specStatus = document.getElementById('spec-status');
+        const specTimestamp = document.getElementById('spec-timestamp');
+        const consoleLogs = document.getElementById('console-logs');
+        const packetCounter = document.getElementById('packet-counter');
+
+        let totalPackets = 0;
+
+        // 1. Chart.js Setup for Real-time Trend
+        const maxDataPoints = 15;
+        const trendLabels = [];
+        const voltageData = [];
+        const currentData = [];
+        const powerData = [];
+
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [
+                    {
+                        label: 'Daya (W)',
+                        data: powerData,
+                        borderColor: '#fbbf24',
+                        backgroundColor: 'rgba(251, 191, 36, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        yAxisID: 'yPower',
+                        fill: true
+                    },
+                    {
+                        label: 'Tegangan (V)',
+                        data: voltageData,
+                        borderColor: '#0284c7',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        yAxisID: 'yVolt'
+                    },
+                    {
+                        label: 'Arus (A)',
+                        data: currentData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        yAxisID: 'yCurrent'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 300 },
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: () => document.body.classList.contains('dark-mode') ? '#94a3b8' : '#64748b',
+                            font: { family: 'JetBrains Mono', size: 11 }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { color: () => document.body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                        ticks: { color: () => document.body.classList.contains('dark-mode') ? '#94a3b8' : '#64748b', font: { family: 'JetBrains Mono', size: 10 } }
+                    },
+                    yPower: {
+                        position: 'left',
+                        suggestedMin: 0,
+                        suggestedMax: 300,
+                        grid: { color: () => document.body.classList.contains('dark-mode') ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' },
+                        ticks: { color: '#fbbf24', font: { family: 'JetBrains Mono', size: 10 } }
+                    },
+                    yVolt: {
+                        position: 'right',
+                        suggestedMin: 25,
+                        suggestedMax: 40,
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: '#0284c7', font: { family: 'JetBrains Mono', size: 10 } }
+                    },
+                    yCurrent: {
+                        position: 'right',
+                        suggestedMin: 0,
+                        suggestedMax: 10,
+                        grid: { drawOnChartArea: false },
+                        ticks: { color: '#10b981', font: { family: 'JetBrains Mono', size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // 2. Interactive Night Mode Toggle
+        function toggleNightMode() {
+            const isDark = document.body.classList.toggle('dark-mode');
+            const icon = document.getElementById('theme-icon');
+            const label = document.getElementById('theme-label');
+            
+            if (isDark) {
+                icon.textContent = '☀️';
+                label.textContent = 'Day Mode';
+            } else {
+                icon.textContent = '🌙';
+                label.textContent = 'Night Mode';
+            }
+            trendChart.update();
+        }
+
+        // 3. Telemetry Update Function
+        function updateTelemetryUI(data) {
+            if (!data || typeof data.voltage_v === 'undefined') return;
+
+            totalPackets++;
+            packetCounter.textContent = `Packets: ${totalPackets}`;
+
+            // Numerical Values with Flash animation
+            elVoltage.textContent = Number(data.voltage_v).toFixed(2);
+            elCurrent.textContent = Number(data.current_a).toFixed(2);
+            elPower.textContent = Number(data.power_w).toFixed(2);
+            elTemp.textContent = Number(data.temperature_c).toFixed(2);
+
+            [elVoltage, elCurrent, elPower, elTemp].forEach(el => {
+                el.classList.remove('flash-update');
+                void el.offsetWidth; // trigger reflow
+                el.classList.add('flash-update');
+            });
+
+            // Gauge Percentages
+            // Voltage: 0 - 40V
+            const pctV = Math.min(100, Math.max(0, (data.voltage_v / 40.0) * 100));
+            gaugeVoltage.style.width = `${pctV}%`;
+
+            // Current: 0 - 10A
+            const pctI = Math.min(100, Math.max(0, (data.current_a / 10.0) * 100));
+            gaugeCurrent.style.width = `${pctI}%`;
+
+            // Power: 0 - 350W
+            const pctP = Math.min(100, Math.max(0, (data.power_w / 350.0) * 100));
+            gaugePower.style.width = `${pctP}%`;
+
+            // Temperature: 0 - 70°C
+            const pctT = Math.min(100, Math.max(0, (data.temperature_c / 70.0) * 100));
+            gaugeTemp.style.width = `${pctT}%`;
+
+            // System Specs & Auxiliary
+            if (data.grid_voltage_v) specGridV.textContent = `${data.grid_voltage_v.toFixed(1)} V`;
+            if (data.grid_frequency_hz) specGridFreq.textContent = `${data.grid_frequency_hz.toFixed(2)} Hz`;
+            if (data.inverter_efficiency_pct) specEff.textContent = `${data.inverter_efficiency_pct.toFixed(1)} %`;
+            if (data.total_energy_kwh) specEnergy.textContent = `${data.total_energy_kwh.toFixed(3)} kWh`;
+            if (data.system_state) specStatus.textContent = data.system_state;
+
+            // Timestamp formatting
+            const now = new Date();
+            const timeStr = now.toTimeString().split(' ')[0];
+            specTimestamp.textContent = timeStr;
+
+            // Update MQTT indicator
+            mqttLed.classList.add('active');
+            mqttStatusText.textContent = "MQTT: ONLINE";
+
+            // Push to Chart
+            if (trendLabels.length >= maxDataPoints) {
+                trendLabels.shift();
+                voltageData.shift();
+                currentData.shift();
+                powerData.shift();
+            }
+            trendLabels.push(timeStr);
+            voltageData.push(data.voltage_v);
+            currentData.push(data.current_a);
+            powerData.push(data.power_w);
+            trendChart.update();
+
+            // Append to Console Log
+            addConsoleLog(timeStr, "MQTT_RX", `V=${data.voltage_v}V | I=${data.current_a}A | P=${data.power_w}W | T=${data.temperature_c}°C`);
+        }
+
+        function addConsoleLog(timeStr, tag, message) {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `
+                <span class="log-time">[${timeStr}]</span>
+                <span class="log-topic">[${tag}]</span>
+                <span class="log-msg">${message}</span>
+            `;
+            consoleLogs.insertBefore(entry, consoleLogs.firstChild);
+
+            // Limit log entries in DOM
+            if (consoleLogs.children.length > 50) {
+                consoleLogs.removeChild(consoleLogs.lastChild);
+            }
+        }
+
+        // 4. WebSocket Client with Auto-Reconnect
+        let socket = null;
+        let reconnectInterval = 3000;
+
+        function connectWebSocket() {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsHost = window.location.hostname || 'localhost';
+            const wsPort = window.location.port ? `:${window.location.port}` : ':8000';
+            const wsUrl = `${wsProtocol}//${wsHost}${wsPort}/ws`;
+
+            console.log(`[WS] Connecting to ${wsUrl}...`);
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = function() {
+                console.log("[WS] Connected successfully.");
+                wsLed.classList.add('active');
+                wsStatusText.textContent = "WS: CONNECTED";
+                addConsoleLog(new Date().toTimeString().split(' ')[0], "SYSTEM", "WebSocket terkoneksi ke server gateway.");
+            };
+
+            socket.onmessage = function(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    updateTelemetryUI(data);
+                } catch (e) {
+                    console.error("[WS] Error parsing JSON payload:", e);
+                }
+            };
+
+            socket.onclose = function(event) {
+                console.warn("[WS] Socket disconnected. Code:", event.code);
+                wsLed.classList.remove('active');
+                wsStatusText.textContent = "WS: DISCONNECTED";
+                mqttLed.classList.remove('active');
+                mqttStatusText.textContent = "MQTT: STANDBY";
+                addConsoleLog(new Date().toTimeString().split(' ')[0], "WARN", "Koneksi WebSocket terputus. Mencoba reconnect dalam 3 detik...");
+                
+                // Reconnect attempt
+                setTimeout(connectWebSocket, reconnectInterval);
+            };
+
+            socket.onerror = function(err) {
+                console.error("[WS] WebSocket error:", err);
+                socket.close();
+            };
+        }
+
+        // Initialize WebSocket connection on load
+        window.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+        });
+    </script>
+</body>
+</html>
