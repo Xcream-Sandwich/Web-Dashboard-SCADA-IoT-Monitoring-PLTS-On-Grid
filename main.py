@@ -20,7 +20,7 @@ if sys.platform == "win32":
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import paho.mqtt.client as mqtt
 
@@ -32,7 +32,6 @@ MQTT_CLIENT_ID = "PLTS_FastAPI_Backend_Subscriber"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 INDEX_HTML_PATH = os.path.join(BASE_DIR, "index.html")
-CV_PDF_PATH = os.path.join(BASE_DIR, "CV_Anda.pdf")
 
 # Global State
 event_loop: Optional[asyncio.AbstractEventLoop] = None
@@ -188,19 +187,6 @@ async def get_index():
         with open(INDEX_HTML_PATH, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     return HTMLResponse("<h1>SCADA Dashboard file (index.html) not found.</h1>", status_code=404)
-
-
-@app.get("/CV_Anda.pdf")
-async def download_cv():
-    """Serves the CV PDF file with download headers."""
-    if os.path.exists(CV_PDF_PATH):
-        return FileResponse(
-            path=CV_PDF_PATH,
-            filename="CV_Anda.pdf",
-            media_type="application/pdf",
-            headers={"Content-Disposition": "attachment; filename=CV_Anda.pdf"}
-        )
-    return HTMLResponse("<h3>CV_Anda.pdf is being generated...</h3>", status_code=404)
 
 
 @app.get("/api/status")

@@ -1,10 +1,10 @@
-#  PLTS On-Grid IoT & SCADA Simulator
+# ☀️ PLTS On-Grid IoT & SCADA Simulator
 
 Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SCADA**, **FastAPI**, **MQTT**, dan **WebSockets**. Dirancang untuk simulasi penuh secara lokal tanpa memerlukan perangkat keras fisik.
 
 ---
 
-##  Arsitektur Sistem
+## 🏗️ Arsitektur Sistem
 
 ```text
 +------------------------+        MQTT Topic        +-------------------------+
@@ -22,20 +22,19 @@ Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SC
 
 ---
 
-##  Komponen Proyek
+## 📦 Komponen Proyek
 
 | File | Deskripsi |
 | :--- | :--- |
 | **`simulator.py`** | Pembangkit data telemetri PLTS On-Grid (Tegangan: 30-36V, Arus: 5-8A, Daya: V×A, Suhu: 25-45°C) menggunakan `paho-mqtt`. |
 | **`main.py`** | Backend server FastAPI bertindak sebagai MQTT Subscriber & WebSocket broadcaster (`/ws`). Mengatur CORS & endpoint statis. |
-| **`index.html`** | Antarmuka web SCADA bergaya *Industrial Control Room* dengan pembacaan metriks real-time, Live Trend Chart, Event Log, **Night Mode Toggle**, dan tombol **Download CV**. |
-| **`CV_Anda.pdf`** | Dokumen CV profil Senior IoT & SCADA Engineer yang terhubung ke tombol download. |
+| **`index.html`** | Antarmuka web SCADA bergaya *Industrial Control Room* dengan pembacaan metriks real-time, Live Trend Chart, Event Log, dan **Night Mode Toggle**. |
 | **`broker.py`** | *(Opsional)* Micro MQTT broker Python bawaan jika Mosquitto belum terpasang di komputer. |
 | **`requirements.txt`** | Daftar pustaka dependensi Python (`fastapi`, `uvicorn`, `paho-mqtt`, `websockets`, `jinja2`). |
 
 ---
 
-##  Panduan Menjalankan Sistem
+## 🚀 Panduan Menjalankan Sistem
 
 Buka **3 Terminal Terpisah** di direktori proyek: `C:\Users\ok\.gemini\antigravity\scratch\plts-scada-iot`
 
@@ -79,14 +78,13 @@ python simulator.py
 
 ---
 
-##  Akses Dashboard SCADA
+## 🖥️ Akses Dashboard SCADA
 
 Buka browser dan navigasikan ke:
- **[http://localhost:8000](http://localhost:8000)**
+👉 **[http://localhost:8000](http://localhost:8000)**
 
 ### Fitur Interaktif pada Dashboard:
 1. **Real-Time Telemetry Display:** Tegangan (30-36V), Arus (5-8A), Daya (W), dan Suhu (25-45°C) terupdate otomatis via WebSocket setiap 2 detik.
-2. **Interactive Night Mode:** Klik tombol ** Day Mode /  Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
-3. **Download CV:** Klik tombol ** Download CV** untuk mengunduh `CV_Anda.pdf`.
-4. **Live Trend Chart:** Grafik multivariat dinamis yang memvisualisasikan tren daya, tegangan, dan arus secara real-time.
-5. **Live MQTT Stream Console:** Memonitor paket data mentah yang masuk dari broker.
+2. **Interactive Night Mode:** Klik tombol **☀️ Day Mode / 🌙 Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
+3. **Live Trend Chart:** Grafik multivariat dinamis yang memvisualisasikan tren daya, tegangan, dan arus secara real-time.
+4. **Live MQTT Stream Console:** Memonitor paket data mentah yang masuk dari broker.

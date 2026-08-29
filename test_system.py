@@ -33,14 +33,7 @@ async def run_tests():
         assert "PLTS On-Grid SCADA Control" in r_index.text, "Index HTML missing expected title"
         print("    ✅ GET / PASSED")
 
-        print("[2] Testing GET /CV_Anda.pdf...")
-        r_pdf = await client.get("/CV_Anda.pdf")
-        assert r_pdf.status_code == 200, f"Expected 200, got {r_pdf.status_code}"
-        assert r_pdf.headers.get("content-type") == "application/pdf", "Content-Type is not application/pdf"
-        assert len(r_pdf.content) > 100, "PDF content is empty"
-        print("    ✅ GET /CV_Anda.pdf PASSED")
-
-        print("[3] Testing GET /api/status...")
+        print("[2] Testing GET /api/status...")
         r_status = await client.get("/api/status")
         assert r_status.status_code == 200
         status_json = r_status.json()
