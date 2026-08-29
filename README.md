@@ -1,10 +1,10 @@
-# ☀️ PLTS On-Grid IoT & SCADA Simulator
+#  PLTS On-Grid IoT & SCADA Simulator
 
 Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SCADA**, **FastAPI**, **MQTT**, dan **WebSockets**. Dirancang untuk simulasi penuh secara lokal tanpa memerlukan perangkat keras fisik.
 
 ---
 
-## 🏗️ Arsitektur Sistem
+##  Arsitektur Sistem
 
 ```text
 +------------------------+        MQTT Topic        +-------------------------+
@@ -22,7 +22,7 @@ Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SC
 
 ---
 
-## 📦 Komponen Proyek
+##  Komponen Proyek
 
 | File | Deskripsi |
 | :--- | :--- |
@@ -34,7 +34,7 @@ Sistem pemantauan Pembangkit Listrik Tenaga Surya (PLTS) *On-Grid* berbasis **SC
 
 ---
 
-## 🚀 Panduan Menjalankan Sistem
+##  Panduan Menjalankan Sistem
 
 Buka **3 Terminal Terpisah** di direktori proyek: `C:\Users\ok\.gemini\antigravity\scratch\plts-scada-iot`
 
@@ -78,13 +78,13 @@ python simulator.py
 
 ---
 
-## 🖥️ Akses Dashboard SCADA
+##  Akses Dashboard SCADA
 
 Buka browser dan navigasikan ke:
-👉 **[http://localhost:8000](http://localhost:8000)**
+ **[http://localhost:8000](http://localhost:8000)**
 
 ### Fitur Interaktif pada Dashboard:
 1. **Real-Time Telemetry Display:** Tegangan (30-36V), Arus (5-8A), Daya (W), dan Suhu (25-45°C) terupdate otomatis via WebSocket setiap 2 detik.
-2. **Interactive Night Mode:** Klik tombol **☀️ Day Mode / 🌙 Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
+2. **Interactive Night Mode:** Klik tombol ** Day Mode /  Night Mode** di pojok kanan atas untuk beralih antara tema gelap Cyber-SCADA dan tema terang Industrial.
 3. **Live Trend Chart:** Grafik multivariat dinamis yang memvisualisasikan tren daya, tegangan, dan arus secara real-time.
 4. **Live MQTT Stream Console:** Memonitor paket data mentah yang masuk dari broker.
